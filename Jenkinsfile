@@ -1,20 +1,25 @@
-pipeline {
-    agent any 
-    stages {
-        stage('Build') { 
-            steps {
-                echo 'Stage 1 -> Build'
-            }
+node {
+    stage('Preparation') {
+        git 'https://github.com/alexpadalka/spring-petclinic.git'
+        steps {
+            echo 'Stage 1 -> Preparation'
         }
-        stage('Test') { 
-            steps {
-                echo 'Stage 2 -> Test'
-            }
+    }
+    stage('Build') {
+        steps {
+            echo 'Stage 2 -> Build'
         }
-        stage('Deploy') { 
-            steps {
-                echo 'Stage 3 -> Deploy'
-            }
+        if (isUnix()) {
+            sh '"$MVN_HOME/bin/mvn" -Dmaven.test.failure.ignore clean package'
+        } else {
+            bat(/"%MVN_HOME%\bin\mvn" -Dmaven.test.failure.ignore clean package/)
         }
+    }
+    stage('Results') {
+        steps {
+            echo 'Stage 3 -> Results'
+        }
+        junit '**/target/surefire-reports/TEST-*.xml'
+        archiveArtifacts 'target/*.jar'
     }
 }
